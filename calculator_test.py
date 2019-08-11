@@ -2,7 +2,6 @@ import re
 def analysis(expression):
     num=re.split('[*/+-]',expression)
     symbol=re.findall('[*/+-]',expression)
-    # print(num, symbol)
     return judge_sign(num, symbol)
 
 def judge_sign(num_list, symbol_list):
@@ -10,7 +9,6 @@ def judge_sign(num_list, symbol_list):
         temp = []
         for i,j in enumerate(symbol_list):
             if num_list[i]:
-                # print(i)
                 temp.append(float(num_list[i]))
                 temp.append(j)
             else:
@@ -24,9 +22,21 @@ def judge_sign(num_list, symbol_list):
             temp.append(num_list[i])
             temp.append(j)
         temp.append(num_list[-1])
+
         return multiply_divide(temp)
 
-    # multiply_divide(temp)
+def rm_brackt(expression):
+    if '(' in expression:
+        brackt_left=re.search('\(',expression).span()
+        brackt_right = re.search('\)', expression).span()
+        if '\(' in expression[brackt_left[0]:brackt_right[1]]:
+            rm_brackt(expression[brackt_left[1]:brackt_right[1]])
+        else:
+            reslut=analysis(expression[brackt_left[1]:brackt_right[0]])
+            new_expression=expression[:brackt_left[0]]+str(reslut)+expression[brackt_right[1]:]
+            return rm_brackt(new_expression)
+    else:
+        return analysis(expression)
 def multiply_divide(ex_list):
     temp=ex_list.copy()
     if '*' in temp or '/'in temp:
@@ -37,16 +47,14 @@ def multiply_divide(ex_list):
                 temp.pop(i)
                 return multiply_divide(temp)
             elif j=="/":
-                temp[i-1]=float(temp[i-1])/float(temp[i-1])
+                temp[i-1]=float(temp[i-1])/float(temp[i+1])
                 temp.pop(i)
                 temp.pop(i)
                 return multiply_divide(temp)
     else:
-        # print(temp)
         return add_subtract(temp)
 def add_subtract(ex_list):
     temp = ex_list.copy()
-    # print(temp)
     if '+' in temp or '-' in temp:
         for i, j in enumerate(temp):
             if j == "+":
@@ -55,18 +63,15 @@ def add_subtract(ex_list):
                 temp.pop(i)
                 return add_subtract(temp)
             elif j == "-":
-                temp[i - 1] = float(temp[i - 1] )- float(temp[i - 1])
+                temp[i - 1] = float(temp[i - 1] )- float(temp[i+1])
                 temp.pop(i)
                 temp.pop(i)
                 return add_subtract(temp)
-    print(temp[0],'================')
+    else:
+        return temp[0]
 
-# num=re.split('[*/+-]','-2+2+3--4')
-# # symbol=re.findall('[*/+-]','-2+2+3--4')
-# print(num)
-# print(symbol)
-a=-2+-2*-3--4/5---6*--6
-analysis(str(a))
-print(a)
-# a=[1,2,3]
-# a.pop(0,1)
+
+if __name__=='__main__':
+    expression='12+12*5+(-5*2)/((3+7)*0.5)'
+    print(rm_brackt(expression))
+    print(12+12*5+(-5*2)/(3+7))
